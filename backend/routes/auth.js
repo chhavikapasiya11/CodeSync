@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
-// Signup Route
+//  Signup Route
 router.post('/signup', async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -29,12 +30,12 @@ router.post('/signup', async (req, res) => {
 
     res.status(201).json({ msg: 'User registered successfully' });
   } catch (err) {
-    console.error('Signup Error:', err); // Log actual error
+    console.error('Signup Error:', err);
     res.status(500).json({ msg: 'Server error during signup' });
   }
 });
 
-// Login Route
+//  Login Route
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -53,8 +54,16 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ msg: 'Invalid credentials' });
     }
 
+  
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '70d' }
+    );
+
     res.status(200).json({
       msg: 'Login successful',
+      token,
       user: {
         id: user._id,
         name: user.name,
@@ -62,9 +71,10 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Login Error:', err); // Log actual error
+    console.error('Login Error:', err);
     res.status(500).json({ msg: 'Server error during login' });
   }
 });
+
 
 module.exports = router;
